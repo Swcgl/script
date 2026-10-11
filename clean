@@ -1,0 +1,94 @@
+local StarterGui = game:GetService("StarterGui")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+local function Notify(title, text, duration)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = duration
+        })
+    end)
+end
+
+-- 起動3秒後に通知
+task.delay(3, function()
+    Notify("Potato Graphics", "ポテト画質を起動しました", 8)
+end)
+
+-- 最低グラフィック品質を要求
+pcall(function()
+    local settings = UserSettings():GetService("UserGameSettings")
+    settings.SavedQualityLevel =
+        Enum.SavedQualitySetting.QualityLevel1
+end)
+
+-- ライティング軽量化
+pcall(function()
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 1000000
+    Lighting.EnvironmentDiffuseScale = 0
+    Lighting.EnvironmentSpecularScale = 0
+    Lighting.Brightness = 2
+end)
+
+-- Terrain軽量化
+pcall(function()
+    local terrain = Workspace:FindFirstChildOfClass("Terrain")
+    if terrain then
+        terrain.Decoration = false
+        terrain.WaterWaveSize = 0
+        terrain.WaterWaveSpeed = 0
+        terrain.WaterReflectance = 0
+    end
+end)
+
+local function Optimize(obj)
+    pcall(function()
+        if obj:IsA("PostEffect") then
+            obj.Enabled = false
+
+        elseif obj:IsA("ParticleEmitter")
+            or obj:IsA("Trail")
+            or obj:IsA("Beam")
+            or obj:IsA("Smoke")
+            or obj:IsA("Fire")
+            or obj:IsA("Sparkles") then
+            obj.Enabled = false
+
+        elseif obj:IsA("PointLight")
+            or obj:IsA("SpotLight")
+            or obj:IsA("SurfaceLight") then
+            obj.Enabled = false
+
+        elseif obj:IsA("Clouds") then
+            obj.Enabled = false
+
+        elseif obj:IsA("Decal")
+            or obj:IsA("Texture") then
+            obj.Transparency = 1
+
+        elseif obj:IsA("MeshPart") then
+            obj.CastShadow = false
+            obj.Reflectance = 0
+            obj.RenderFidelity = Enum.RenderFidelity.Performance
+
+        elseif obj:IsA("BasePart") then
+            obj.CastShadow = false
+            obj.Reflectance = 0
+        end
+    end)
+end
+
+-- Workspace内のオブジェクトを一度だけ軽量化
+for _, obj in ipairs(Workspace:GetDescendants()) do
+    Optimize(obj)
+end
+
+-- Lighting内のエフェクトも軽量化
+for _, obj in ipairs(Lighting:GetDescendants()) do
+    Optimize(obj)
+end
+
+Notify("Potato Graphics", "超軽量化を適用しました", 5)
